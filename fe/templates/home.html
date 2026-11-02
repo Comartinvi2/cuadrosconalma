@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% block main %}
+<h1 class="sr-only">Cuadros religiosos modernos: arte cristiano y católico para tu casa</h1>
+<section class="hero">
+  {% if hero %}<img src="{{ hero }}" alt="Cuadro religioso moderno en un salón" class="hero-img">{% else %}<div class="hero-img hero-ph"></div>{% endif %}
+</section>
+<section class="band"><span class="band-big">«Paz a esta casa»</span><span class="band-small">Lucas 10, 5 · arte de fe para casas de hoy</span></section>
+
+<section class="section">
+  <p class="eyebrow center">Los más vendidos</p>
+  {% with products=best %}{% include "_grid.html" %}{% endwith %}
+  <p class="center"><a class="btn-outline" href="/coleccion/todos">Ver todos ➔</a></p>
+</section>
+
+<section class="split">
+  <div class="split-text">
+    <h2>Pensado para quedarse</h2>
+    <p class="eyebrow">Cada cuadro, con su versículo</p>
+    <ul class="ticks">
+      <li>✦ Diseños originales, cada uno con su versículo</li>
+      <li>✦ Impreso bajo pedido en España, a todo color</li>
+      <li>✦ Llega montado en su marco o bastidor de madera</li>
+      <li>✦ Envío gratis a la Península y Baleares</li>
+    </ul>
+  </div>
+  <div class="split-img">{% if best and best[0].img2 %}<img src="{{ best[0].img2_md }}" alt="Detalle de cuadro religioso" loading="lazy">{% endif %}</div>
+</section>
+
+<section class="section reviews-block">
+  {% if reviews %}
+    <h2 class="center serif">Lo que dicen las familias</h2>
+    <div class="rev-carousel">
+      {% for r in reviews %}<figure class="rev"><span class="quote">“</span><blockquote>{{ r.body }}</blockquote><p class="stars">★★★★★</p><figcaption>{{ r.name }}</figcaption></figure>{% endfor %}
+    </div>
+  {% else %}
+    <h2 class="center serif">Hecho para durar generaciones</h2>
+    <div class="promises">
+      <div><p class="p-big">Original</p><p>diseños propios con su versículo</p></div>
+      <div><p class="p-big">Gratis</p><p>envío a la Península y Baleares</p></div>
+      <div><p class="p-big">100 %</p><p>reposición sin coste si llega dañado</p></div>
+    </div>
+  {% endif %}
+</section>
+
+<section class="find">
+  <p class="find-q">¿Dudas entre varios?</p>
+  <a class="btn-outline" href="/encuentra-tu-cuadro">¿Cuál es tu cuadro? →</a>
+  <p class="eyebrow">Cinco preguntas</p>
+</section>
+{% endblock %}
