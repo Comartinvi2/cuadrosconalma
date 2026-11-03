@@ -16,7 +16,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from PIL import Image, ImageOps
 
-from . import art, config, content, db, seed, shop
+from . import adengine, art, config, content, db, seed, shop
 
 log = logging.getLogger("fe")
 logging.basicConfig(level=logging.INFO)
@@ -259,7 +259,7 @@ async def api_products():
 async def api_checkout(request: Request):
     body = await request.json()
     try:
-        url = await shop.create_checkout(body.get("items") or [], email=(body.get("email") or None), discount=bool(body.get("discount")))
+        url = await shop.create_checkout(body.get("items") or [], email=(body.get("email") or None), discount=bool(body.get("discount")), clicks=adengine.clicks(request.cookies))
     except ValueError as e:
         raise HTTPException(400, str(e))
     return {"url": url}
@@ -292,6 +292,7 @@ async def stripe_webhook(request: Request):
             o = await shop.mark_paid(s)
             if o:
                 await shop.fulfil(o["id"])
+            asyncio.create_task(adengine.report_sale(s))  # AdEngine ignora los avisos repetidos del mismo pedido
     return {"ok": True}
 
 

@@ -48,7 +48,7 @@ async def validate_items(raw: list[dict]) -> list[dict]:
     return items
 
 
-async def create_checkout(raw_items: list[dict], email: str | None = None, discount: bool = False) -> str:
+async def create_checkout(raw_items: list[dict], email: str | None = None, discount: bool = False, clicks: dict | None = None) -> str:
     items = await validate_items(raw_items)
     if not items:
         raise ValueError("carrito vacío")
@@ -67,7 +67,7 @@ async def create_checkout(raw_items: list[dict], email: str | None = None, disco
         } for i in items],
         success_url=f"{config.BASE_URL}/gracias?pedido={order_id}&session_id={{CHECKOUT_SESSION_ID}}",
         cancel_url=f"{config.BASE_URL}/carrito",
-        metadata={"order_id": order_id, "store": "fe"},
+        metadata={"order_id": order_id, "store": "fe", **(clicks or {})},  # clicks: gclid/fbc/fbp del anuncio, para AdEngine
         client_reference_id=order_id,
         locale="es",
         shipping_address_collection={"allowed_countries": ["ES", "PT", "FR", "IT", "DE", "BE", "NL", "AT", "IE", "US"]},  # Latinoamérica: Gelato no produce allí (envío 41 € y 3-4 semanas)
