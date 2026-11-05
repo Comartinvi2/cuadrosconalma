@@ -30,7 +30,7 @@ BUCKET = env("FE_BUCKET", "fe")
 
 # Analítica (vacío = no se carga)
 GA4_ID = env("GA4_ID", "G-MD0MEYTW7S"); GADS_ID = env("GADS_ID", "AW-18552188470"); GADS_LABEL = env("GADS_LABEL")
-META_PIXEL_ID = env("META_PIXEL_ID", "1881299563033173"); CLARITY_ID = env("CLARITY_ID"); PINTEREST_TAG_ID = env("PINTEREST_TAG_ID")
+META_PIXEL_ID = env("META_PIXEL_ID", "1881299563033173"); CLARITY_ID = env("CLARITY_ID", "z8zv313kgj"); PINTEREST_TAG_ID = env("PINTEREST_TAG_ID")
 
 # --- Producto, tamaños y precios (euros, IVA incluido) ----------------------
 FRAMES = [
