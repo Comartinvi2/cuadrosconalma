@@ -38,7 +38,7 @@ FRAMES = [
     ("dark", "Madera oscura"),
     ("gold", "Dorado"),
     ("black", "Negro"),
-    ("none", "Sin marco"),
+    ("none", "Sin marco · lienzo en bastidor"),
 ]
 FRAME_COLORS = {"natural": (198, 174, 138), "dark": (92, 62, 42), "black": (28, 28, 28), "gold": (176, 146, 86), "white": (240, 238, 232)}
 
