@@ -502,14 +502,15 @@ def _png(img) -> bytes:
     b = io.BytesIO(); img.save(b, format="PNG"); return b.getvalue()
 
 
-THUMB_W, MD_W = 600, 1200
+SM_W, THUMB_W, MD_W = 240, 600, 1200
 
 
-async def _web_versions(slug: str, name: str, img: Image.Image, v) -> tuple[str, str]:
-    """Sube la miniatura (600 px) y la versión de galería (1200 px) en WebP."""
+async def _web_versions(slug: str, name: str, img: Image.Image, v) -> tuple[str, str, str]:
+    """Sube la miniatura de la tira (240 px), la tarjeta (600 px) y la galería (1200 px) en WebP."""
+    sm = await db.upload(f"{slug}/web/{name}-{SM_W}.webp", await asyncio.to_thread(art.webp, img, SM_W, 75), "image/webp")
     th = await db.upload(f"{slug}/web/{name}-{THUMB_W}.webp", await asyncio.to_thread(art.webp, img, THUMB_W, 78), "image/webp")
     md = await db.upload(f"{slug}/web/{name}-{MD_W}.webp", await asyncio.to_thread(art.webp, img, MD_W, 82), "image/webp")
-    return f"{th}?v={v}", f"{md}?v={v}"
+    return f"{sm}?v={v}", f"{th}?v={v}", f"{md}?v={v}"
 
 
 THUMBS = {"running": False, "done": 0, "total": 0, "errors": []}
@@ -523,15 +524,15 @@ async def _thumbs_job(force: bool):
         sem = asyncio.Semaphore(4)
 
         async def one(im: dict, slug: str):
-            if im.get("thumb") and im.get("md") and not force:
+            if im.get("thumb") and im.get("md") and im.get("sm") and not force:
                 return im
             async with sem:
                 base = im["url"].split("?")[0]
                 name = base.rsplit("/", 1)[1].rsplit(".", 1)[0]
                 v = im["url"].split("v=")[1] if "v=" in im["url"] else int(time.time())
                 img = Image.open(io.BytesIO(await db.download(base))).convert("RGB")
-                th, md = await _web_versions(slug, name, img, v)
-                return {**im, "thumb": th, "md": md}
+                sm, th, md = await _web_versions(slug, name, img, v)
+                return {**im, "sm": sm, "thumb": th, "md": md}
 
         for p in prods:
             try:
@@ -552,7 +553,7 @@ async def _thumbs_on_start():
     """Al arrancar, si alguna foto no tiene su versión ligera, la crea en segundo plano."""
     async def go():
         try:
-            if db.ENABLED and any(not i.get("thumb") for p in await db.products(force=True) for i in (p.get("images") or [])):
+            if db.ENABLED and any(not (i.get("thumb") and i.get("sm")) for p in await db.products(force=True) for i in (p.get("images") or [])):
                 await _thumbs_job(False)
         except Exception:
             log.exception("thumbs al arrancar")
@@ -582,8 +583,8 @@ async def build_images(p: dict, a: Image.Image, rooms: dict) -> list[dict]:
 
     async def up(name, img, kindtag, frame=None):
         url = await db.upload(f"{slug}/{name}.jpg", art.jpeg(img, 85, 1800))
-        th, md = await _web_versions(slug, name, img, t)
-        out.append({"url": f"{url}?v={t}", "thumb": th, "md": md, "kind": kindtag, **({"frame": frame} if frame else {})})
+        sm, th, md = await _web_versions(slug, name, img, t)
+        out.append({"url": f"{url}?v={t}", "sm": sm, "thumb": th, "md": md, "kind": kindtag, **({"frame": frame} if frame else {})})
 
     main_frame = "natural"
     await up("main", await asyncio.to_thread(art.on_wall, a, main_frame, kind), "main", main_frame)
