@@ -2,9 +2,9 @@
 {% block main %}
 <section class="pdp">
   <div class="gallery">
-    <div class="g-main">{% if p.images %}<img id="gMain" src="{{ p.images[0].md or p.images[0].url }}" alt="{{ p.title }}">{% else %}<div class="ph big">{{ p.title }}</div>{% endif %}</div>
+    <div class="g-main">{% if p.images %}<img id="gMain" src="{{ p.images[0].md or p.images[0].url }}"{% if p.images[0].thumb and p.images[0].md %} srcset="{{ p.images[0].thumb }} 600w, {{ p.images[0].md }} 1200w" sizes="(max-width: 700px) and (min-resolution: 2.5dppx) 200px, (max-width: 900px) 92vw, 630px"{% endif %} fetchpriority="high" alt="{{ p.title }}">{% else %}<div class="ph big">{{ p.title }}</div>{% endif %}</div>
     <div class="g-thumbs">
-      {% for im in p.images %}<button class="thumb{% if loop.first %} on{% endif %}" data-src="{{ im.md or im.url }}" data-frame="{{ im.frame or '' }}" data-kind="{{ im.kind }}"><img src="{{ im.sm or im.thumb or im.url }}" alt="{{ p.title }} — foto {{ loop.index }}" loading="lazy"></button>{% endfor %}
+      {% for im in p.images %}<button class="thumb{% if loop.first %} on{% endif %}" data-src="{{ im.md or im.url }}" data-thumb="{{ im.thumb or '' }}" data-frame="{{ im.frame or '' }}" data-kind="{{ im.kind }}"><img src="{{ im.sm or im.thumb or im.url }}" alt="{{ p.title }} — foto {{ loop.index }}" loading="lazy"></button>{% endfor %}
     </div>
   </div>
   <div class="buy">
@@ -99,7 +99,10 @@ document.querySelectorAll('#frames .chip').forEach(b => b.onclick = () => {
   const t = document.querySelector('.thumb[data-frame="'+sel.frame+'"]'); if (t) t.click();
 });
 document.querySelectorAll('#sizes .chip').forEach(b => b.onclick = () => { document.querySelectorAll('#sizes .chip').forEach(x => x.classList.remove('on')); b.classList.add('on'); sel.size = b.dataset.k; fePrice(); });
-document.querySelectorAll('.thumb').forEach(b => b.onclick = () => { document.querySelectorAll('.thumb').forEach(x => x.classList.remove('on')); b.classList.add('on'); document.getElementById('gMain').src = b.dataset.src; });
+document.querySelectorAll('.thumb').forEach(b => b.onclick = () => { document.querySelectorAll('.thumb').forEach(x => x.classList.remove('on')); b.classList.add('on');
+  const g = document.getElementById('gMain'); g.src = b.dataset.src;
+  if (b.dataset.thumb) g.srcset = b.dataset.thumb + ' 600w, ' + b.dataset.src + ' 1200w'; else g.removeAttribute('srcset');
+});
 function item(){ return {slug: P.slug, title: P.title, kind: P.kind, size: sel.size, frame: sel.frame, frameName: document.getElementById('frameName').textContent, qty: sel.qty, price: fePrice(), img: P.img}; }
 document.getElementById('add').onclick = () => { feCartAdd(item()); track('add_to_cart', {value: fePrice()*sel.qty, item: P.title}); location.href = '/carrito'; };
 document.getElementById('buyNow').onclick = () => feCheckout([item()]);
