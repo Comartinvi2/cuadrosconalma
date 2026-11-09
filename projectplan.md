@@ -80,3 +80,17 @@ Aprendizajes:
   escribir también `srcset`.
 - `loading="lazy"` + `display:none` (media query `hover:none`) evita la
   descarga de la foto de hover en táctil sin tocar JS.
+
+## Fase G — embudo propio sin cookies (aprobada por Maria, 9 nov)
+
+Por qué: Clarity solo ve a quien acepta cookies (pocas sesiones) y Maria quería
+cargar las cookies sin consentimiento para medir; eso es ilegal (LSSI 22.2,
+RGPD). Alternativa: contar en nuestro servidor cuántas visitas llegan a cada
+paso. Solo totales por día: ni IP, ni identificadores, ni nada en el móvil.
+
+- [x] `funnel.py`: contadores por día y paso en memoria, guardados cada minuto
+      en Supabase (no hace falta tabla nueva) y al apagar.
+- [x] Pasos: ficha (visita no-bot) → carrito → pago → venta.
+- [x] `/admin/embudo?token=…`: tabla de los últimos 30 días, totales y % de
+      cada paso respecto al anterior.
+- [ ] Probar en local y en producción (los pasos suben al navegar).

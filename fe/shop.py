@@ -5,7 +5,7 @@ import time
 
 import httpx
 
-from . import config, db, mail
+from . import config, db, funnel, mail
 
 
 def _stripe():
@@ -108,6 +108,7 @@ async def mark_paid(session) -> dict | None:
     o = await get_order(oid)
     if not o or o.get("status") not in ("checkout", None):
         return o
+    funnel.hit("venta")
     det = s.get("customer_details") or {}
     ship = s.get("shipping_details") or (s.get("collected_information") or {}).get("shipping_details") or {}
     addr = ship.get("address") or {}

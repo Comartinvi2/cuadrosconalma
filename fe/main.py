@@ -16,7 +16,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from PIL import Image, ImageOps
 
-from . import adengine, art, config, content, db, seed, shop
+from . import adengine, art, config, content, db, funnel, seed, shop
 
 log = logging.getLogger("fe")
 logging.basicConfig(level=logging.INFO)
@@ -154,6 +154,8 @@ async def product_page(request: Request, slug: str):
     p = await db.product(slug)
     if not p:
         raise HTTPException(404)
+    if not funnel.is_bot(request.headers.get("user-agent")):
+        funnel.hit("ficha")
     p = card(p)
     sizes = [{"key": s[0], "label": f"{s[0]} cm" if p["orient"] == "v" else f"{s[0].split('x')[1]}x{s[0].split('x')[0]} cm"} for s in config.sizes_for(p["kind"])]
     frames = [{"key": f[0], "label": f[1]} for f in config.frames_for(p["kind"])]
@@ -199,6 +201,8 @@ async def product_page(request: Request, slug: str):
 
 @app.get("/carrito", response_class=HTMLResponse)
 async def cart_page(request: Request):
+    if not funnel.is_bot(request.headers.get("user-agent")):
+        funnel.hit("carrito")
     return T.TemplateResponse(request, "cart.html", ctx(request, title=f"Carrito · {config.BRAND}", noindex=True))
 
 
@@ -265,6 +269,7 @@ async def api_checkout(request: Request):
         url = await shop.create_checkout(body.get("items") or [], email=(body.get("email") or None), discount=bool(body.get("discount")), clicks=adengine.clicks(request.cookies))
     except ValueError as e:
         raise HTTPException(400, str(e))
+    funnel.hit("pago")
     return {"url": url}
 
 
@@ -443,6 +448,23 @@ async def admin_page(request: Request, token: str = ""):
     return T.TemplateResponse(request, "admin.html", ctx(request, token=token, rooms=list(art.ROOM_TEMPLATES)))
 
 
+@app.get("/admin/embudo", response_class=HTMLResponse)
+async def admin_funnel(token: str = ""):
+    _auth(token)
+    from datetime import timedelta
+    data, S, hoy = funnel.counts(), funnel.STEPS, funnel.today()
+    days = [(hoy - timedelta(days=i)).isoformat() for i in range(30)]
+    tot = {k: sum(data.get(d, {}).get(k, 0) for d in days) for k in S}
+    pct = [f"{round(100 * tot[k] / tot[funnel.BASE[k]])} %" if funnel.BASE.get(k) and tot[funnel.BASE[k]] else "" for k in S]
+    row = lambda cells, tag="td": "<tr>" + "".join(f"<{tag}>{c}</{tag}>" for c in cells) + "</tr>"
+    body = "".join(row([d] + [data.get(d, {}).get(k, 0) for k in S]) for d in days if d in data)
+    return f"""<!doctype html><meta charset="utf-8"><meta name="robots" content="noindex"><title>Embudo</title>
+<style>body{{font:15px system-ui;margin:24px}}table{{border-collapse:collapse}}td,th{{border:1px solid #ddd;padding:6px 10px;text-align:right}}th{{background:#f4f1eb}}</style>
+<h1>Embudo (30 días, sin cookies)</h1>
+<p>Totales por día. «carrito» = visitas a la página del carrito; «pago» = fue a pagar a Stripe (desde el carrito o con «Comprar ya»); la fila % compara carrito y pago con las fichas, y venta con pago.</p>
+<table>{row(["día"] + S, "th")}{row(["<b>total</b>"] + [f"<b>{tot[k]}</b>" for k in S])}{row(["%"] + pct)}{body}</table>"""
+
+
 @app.get("/admin/status")
 async def admin_status(token: str = ""):
     _auth(token)
@@ -561,6 +583,12 @@ async def _thumbs_on_start():
         except Exception:
             log.exception("thumbs al arrancar")
     asyncio.create_task(go())
+    asyncio.create_task(funnel.loop())
+
+
+@app.on_event("shutdown")
+async def _shutdown():
+    await funnel.save()
 
 
 @app.post("/admin/thumbs")
