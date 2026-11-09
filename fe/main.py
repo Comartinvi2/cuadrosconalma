@@ -158,6 +158,8 @@ async def product_page(request: Request, slug: str):
     sizes = [{"key": s[0], "label": f"{s[0]} cm" if p["orient"] == "v" else f"{s[0].split('x')[1]}x{s[0].split('x')[0]} cm"} for s in config.sizes_for(p["kind"])]
     frames = [{"key": f[0], "label": f[1]} for f in config.frames_for(p["kind"])]
     prices = {f"{s['key']}|{f['key']}": config.price_eur(p["kind"], s["key"], f["key"]) for s in sizes for f in frames}
+    # Por defecto, la opción más barata (en lienzo: sin marco · lienzo en bastidor)
+    dframe = min(frames, key=lambda f: config.price_eur(p["kind"], sizes[0]["key"], f["key"]))
     c = p.get("content") or {}
     if not c.get("intro"):
         c = content.fallback(p)
@@ -190,7 +192,7 @@ async def product_page(request: Request, slug: str):
     extra = [ld(prod), crumbs((col["title"], f"/coleccion/{col['slug']}"), (p["title"], f"/cuadro/{p['slug']}"))]
     if c.get("faq"):
         extra.append(faq_ld([(f["q"], f["a"]) for f in c["faq"] if f.get("q") and f.get("a")]))
-    return T.TemplateResponse(request, "product.html", ctx(request, extra_jsonld=extra, og_type="product", p=p, sizes=sizes, frames=frames, prices=json.dumps(prices), c=c, related=related, reviews=revs,
+    return T.TemplateResponse(request, "product.html", ctx(request, extra_jsonld=extra, og_type="product", p=p, sizes=sizes, frames=frames, dframe=dframe, prices=json.dumps(prices), c=c, related=related, reviews=revs,
                                                     title=f"{p['title']} · Cuadro religioso moderno · {config.BRAND}", description=(c.get("intro") or "")[:155],
                                                     og_image=p.get("img_full")))
 

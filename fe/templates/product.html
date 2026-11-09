@@ -12,8 +12,8 @@
     {% if reviews %}<a href="#opiniones" class="p-rev">★★★★★ {{ reviews|length }} opiniones</a>{% endif %}
     <p class="p-price"><span id="price">{{ p.from_price|eur }}</span> <span class="tax">IVA incluido · envío gratis</span></p>
     <div class="opt">
-      <p class="opt-l">Marco: <b id="frameName">{{ frames[0].label }}</b></p>
-      <div class="chips" id="frames">{% for f in frames %}<button class="chip frame-chip f-{{ f.key }}{% if loop.first %} on{% endif %}" data-k="{{ f.key }}" data-l="{{ f.label }}" title="{{ f.label }}"><span></span></button>{% endfor %}</div>
+      <p class="opt-l">Marco: <b id="frameName">{{ dframe.label }}</b></p>
+      <div class="chips" id="frames">{% for f in frames %}<button class="chip frame-chip f-{{ f.key }}{% if f.key == dframe.key %} on{% endif %}" data-k="{{ f.key }}" data-l="{{ f.label }}" title="{{ f.label }}"><span></span></button>{% endfor %}</div>
     </div>
     <div class="opt">
       <p class="opt-l">Tamaño (cm):</p>
@@ -90,7 +90,7 @@
 <script>
 const P = {slug: {{ p.slug|tojson }}, title: {{ p.title|tojson }}, kind: {{ p.kind|tojson }}, img: {{ (p.img or '')|tojson }}};
 const PRICES = {{ prices|safe }};
-let sel = {frame: {{ frames[0].key|tojson }}, size: {{ sizes[0].key|tojson }}, qty: 1};
+let sel = {frame: {{ dframe.key|tojson }}, size: {{ sizes[0].key|tojson }}, qty: 1};
 function fePrice(){ const v = PRICES[sel.size+'|'+sel.frame]; document.getElementById('price').textContent = v.toLocaleString('es-ES') + ' €'; return v; }
 function feQty(d){ sel.qty = Math.max(1, Math.min(10, sel.qty + d)); document.getElementById('qty').textContent = sel.qty; }
 document.querySelectorAll('#frames .chip').forEach(b => b.onclick = () => {
