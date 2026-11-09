@@ -127,8 +127,9 @@ async def home(request: Request):
     best = [card(p) for p in prods if p.get("bestseller")][:20]
     hero_i = next((i for p in prods if p.get("bestseller") for i in (p.get("images") or []) if i.get("kind") == "room"), None)
     hero = (hero_i.get("md") or hero_i["url"]) if hero_i else None
+    hero_thumb = hero_i.get("thumb") if hero_i and hero_i.get("md") else None
     revs = await reviews_for(limit=20)
-    return T.TemplateResponse(request, "home.html", ctx(request, best=best, hero=hero, reviews=revs, title=f"{config.BRAND} · {config.TAGLINE} · Cuadros religiosos modernos", og_image=hero_i["url"] if hero_i else None,
+    return T.TemplateResponse(request, "home.html", ctx(request, best=best, hero=hero, hero_thumb=hero_thumb, reviews=revs, title=f"{config.BRAND} · {config.TAGLINE} · Cuadros religiosos modernos", og_image=hero_i["url"] if hero_i else None,
                                                  description="Cuadros religiosos modernos en lienzo y láminas enmarcadas: arte cristiano y católico en tonos neutros para casas modernas. Envío gratis."))
 
 

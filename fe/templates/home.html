@@ -2,7 +2,7 @@
 {% block main %}
 <h1 class="sr-only">Cuadros religiosos modernos: arte cristiano y católico para tu casa</h1>
 <section class="hero">
-  {% if hero %}<img src="{{ hero }}" alt="Cuadro religioso moderno en un salón" class="hero-img">{% else %}<div class="hero-img hero-ph"></div>{% endif %}
+  {% if hero %}<img src="{{ hero }}"{% if hero_thumb %} srcset="{{ hero_thumb }} 600w, {{ hero }} 1200w" sizes="(max-width: 700px) and (min-resolution: 2.5dppx) 200px, 100vw"{% endif %} fetchpriority="high" alt="Cuadro religioso moderno en un salón" class="hero-img">{% else %}<div class="hero-img hero-ph"></div>{% endif %}
 </section>
 <section class="band"><span class="band-big">«Paz a esta casa»</span><span class="band-small">Lucas 10, 5 · arte de fe para casas de hoy</span></section>
 
