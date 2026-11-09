@@ -103,6 +103,7 @@ document.querySelectorAll('.thumb').forEach(b => b.onclick = () => { document.qu
   const g = document.getElementById('gMain'); g.src = b.dataset.src;
   if (b.dataset.thumb) g.srcset = b.dataset.thumb + ' 600w, ' + b.dataset.src + ' 1200w'; else g.removeAttribute('srcset');
 });
+{ const t0 = document.querySelector('.thumb[data-frame="'+sel.frame+'"]'); if (t0 && !t0.classList.contains('on')) t0.click(); }
 function item(){ return {slug: P.slug, title: P.title, kind: P.kind, size: sel.size, frame: sel.frame, frameName: document.getElementById('frameName').textContent, qty: sel.qty, price: fePrice(), img: P.img}; }
 document.getElementById('add').onclick = () => { feCartAdd(item()); track('add_to_cart', {value: fePrice()*sel.qty, item: P.title}); location.href = '/carrito'; };
 document.getElementById('buyNow').onclick = () => feCheckout([item()]);

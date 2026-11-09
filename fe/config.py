@@ -34,11 +34,11 @@ META_PIXEL_ID = env("META_PIXEL_ID", "1881299563033173"); CLARITY_ID = env("CLAR
 
 # --- Producto, tamaños y precios (euros, IVA incluido) ----------------------
 FRAMES = [
+    ("none", "Sin marco · lienzo en bastidor"),
     ("natural", "Madera clara"),
     ("dark", "Madera oscura"),
     ("gold", "Dorado"),
     ("black", "Negro"),
-    ("none", "Sin marco · lienzo en bastidor"),
 ]
 FRAME_COLORS = {"natural": (198, 174, 138), "dark": (92, 62, 42), "black": (28, 28, 28), "gold": (176, 146, 86), "white": (240, 238, 232)}
 
