@@ -40,7 +40,7 @@ async def validate_items(raw: list[dict]) -> list[dict]:
         image = next((i["url"] for i in (p.get("images") or []) if isinstance(i, dict) and i.get("kind") == "main"), None)
         if size == config.DIGITAL_SIZE:
             items.append({"slug": p["slug"], "title": p["title"], "kind": p["kind"], "size": size, "frame": "none", "qty": 1,
-                          "cents": config.DIGITAL_CENTS, "name": f"{p['title']} · Archivo para imprimir en alta calidad", "image": image})
+                          "cents": config.DIGITAL_CENTS, "name": f"{p['title']} · Lámina en alta calidad para imprimir", "image": image})
             continue
         if size not in {s[0] for s in config.sizes_for(p["kind"])} or frame not in {f[0] for f in config.frames_for(p["kind"])}:
             continue

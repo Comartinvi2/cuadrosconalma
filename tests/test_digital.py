@@ -15,7 +15,7 @@ def validate(raw, monkeypatch):
 def test_archivo_a_19_90_y_una_unidad(monkeypatch):
     [it] = validate([{"slug": "la-cruz", "size": "digital", "frame": "natural", "qty": 5}], monkeypatch)
     assert it["cents"] == 1990 and it["qty"] == 1 and it["frame"] == "none"
-    assert "Archivo para imprimir" in it["name"]
+    assert "Lámina en alta calidad para imprimir" in it["name"]
 
 
 def test_solo_archivo_no_pide_envio(monkeypatch):
