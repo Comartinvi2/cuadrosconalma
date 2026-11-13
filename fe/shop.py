@@ -77,7 +77,7 @@ def downloads(o: dict | None) -> list[dict]:
             for n, it in enumerate(o.get("items") or [], 1) if is_digital(it)]
 
 
-async def create_checkout(raw_items: list[dict], email: str | None = None, discount: bool = False, clicks: dict | None = None) -> str:
+async def create_checkout(raw_items: list[dict], email: str | None = None, discount: bool = False, clicks: dict | None = None, country: str = "") -> str:
     items = await validate_items(raw_items)
     if not items:
         raise ValueError("carrito vacío")
@@ -110,7 +110,7 @@ async def create_checkout(raw_items: list[dict], email: str | None = None, disco
         params["discounts"] = [{"coupon": config.STRIPE_COUPON}]
     else:
         params["allow_promotion_codes"] = True
-    s = stripe.checkout.Session.create(**params)
+    s = create_session(stripe, params, mexico_digital=country == "MX" and not needs_shipping(items))
     await db.patch("fe_orders", "id", order_id, {"stripe_session": s.id})
     return s.url
 
@@ -271,3 +271,25 @@ async def gelato_event(ev: dict) -> dict:
     if st in ("print_error", "canceled", "on_hold", "returned"):
         await mail.admin_alert(f"Pedido {ref}: {st}", str(ev)[:1500])
     return {"ok": True, "status": st}
+
+
+# México: Stripe vende el archivo por nosotros (Managed Payments) y se encarga del IVA mexicano, que obliga desde la
+# primera venta. Solo pedidos solo digitales desde México; el resto, como siempre. Si la cuenta no lo admite, pago normal.
+MX_TAX_CODE = "txcd_10505001"  # Digital Finished Artwork - downloaded - with permanent rights
+
+
+def managed_for_mexico(params: dict) -> dict:
+    mp = {k: v for k, v in params.items() if k not in ("adaptive_pricing", "managed_payments")}  # la moneda local ya va incluida
+    mp["line_items"] = [{**li, "price_data": {**li["price_data"], "product_data": {**li["price_data"]["product_data"], "tax_code": MX_TAX_CODE}}}
+                        for li in params["line_items"]]
+    mp["managed_payments"] = {"enabled": True}
+    return mp
+
+
+def create_session(stripe, params: dict, mexico_digital: bool):
+    if mexico_digital:
+        try:
+            return stripe.checkout.Session.create(**managed_for_mexico(params))
+        except stripe.StripeError as e:
+            print("Managed Payments no disponible, pago normal:", e)
+    return stripe.checkout.Session.create(**params)

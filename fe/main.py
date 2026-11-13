@@ -268,7 +268,7 @@ async def api_products():
 async def api_checkout(request: Request):
     body = await request.json()
     try:
-        url = await shop.create_checkout(body.get("items") or [], email=(body.get("email") or None), discount=bool(body.get("discount")), clicks=adengine.clicks(request.cookies))
+        url = await shop.create_checkout(body.get("items") or [], email=(body.get("email") or None), discount=bool(body.get("discount")), clicks=adengine.clicks(request.cookies), country=request.headers.get("cf-ipcountry", ""))
     except ValueError as e:
         raise HTTPException(400, str(e))
     funnel.hit("pago")
