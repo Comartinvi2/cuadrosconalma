@@ -99,9 +99,10 @@ async def create_checkout(raw_items: list[dict], email: str | None = None, disco
         metadata={"order_id": order_id, "store": "fe", **(clicks or {})},  # clicks: gclid/fbc/fbp del anuncio, para AdEngine
         client_reference_id=order_id,
         locale="es",
+        adaptive_pricing={"enabled": True},  # Stripe enseña el precio en la moneda del cliente (dólares, pesos…); cobramos en euros
     )
     if needs_shipping(items):  # solo archivos: no hay nada que enviar
-        params["shipping_address_collection"] = {"allowed_countries": ["ES", "PT", "FR", "IT", "DE", "BE", "NL", "AT", "IE", "US"]}  # Latinoamérica: Gelato no produce allí (envío 41 € y 3-4 semanas)
+        params["shipping_address_collection"] = {"allowed_countries": ["ES", "PT", "FR", "IT", "DE", "BE", "NL", "AT", "IE", "US", "PR"]}  # Latinoamérica: Gelato no produce allí (envío 41 € y 3-4 semanas)
         params["phone_number_collection"] = {"enabled": True}
     if email:
         params["customer_email"] = email
