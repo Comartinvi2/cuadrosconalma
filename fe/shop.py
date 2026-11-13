@@ -1,4 +1,6 @@
 """Carrito → Stripe Checkout → pedido en Supabase → Gelato."""
+import hashlib
+import hmac
 import json
 import secrets
 import time
@@ -35,6 +37,11 @@ async def validate_items(raw: list[dict]) -> list[dict]:
         if not p:
             continue
         size = str(it.get("size")); frame = str(it.get("frame"))
+        image = next((i["url"] for i in (p.get("images") or []) if isinstance(i, dict) and i.get("kind") == "main"), None)
+        if size == config.DIGITAL_SIZE:
+            items.append({"slug": p["slug"], "title": p["title"], "kind": p["kind"], "size": size, "frame": "none", "qty": 1,
+                          "cents": config.DIGITAL_CENTS, "name": f"{p['title']} · Archivo para imprimir en alta calidad", "image": image})
+            continue
         if size not in {s[0] for s in config.sizes_for(p["kind"])} or frame not in {f[0] for f in config.frames_for(p["kind"])}:
             continue
         qty = max(1, min(10, int(it.get("qty") or 1)))
@@ -43,9 +50,31 @@ async def validate_items(raw: list[dict]) -> list[dict]:
         items.append({
             "slug": p["slug"], "title": p["title"], "kind": p["kind"], "size": size, "frame": frame, "qty": qty,
             "cents": eur * 100, "name": f"{p['title']} · {kind_name} {size} cm · {frame_label(frame)}",
-            "image": next((i["url"] for i in (p.get("images") or []) if isinstance(i, dict) and i.get("kind") == "main"), None),
+            "image": image,
         })
     return items
+
+
+def is_digital(it: dict) -> bool:
+    return it.get("size") == config.DIGITAL_SIZE
+
+
+def needs_shipping(items: list[dict]) -> bool:
+    return any(not is_digital(i) for i in items)
+
+
+def download_sig(order_id: str, n: int) -> str:
+    """Firma del enlace de descarga de un archivo: sin ella no se puede pedir el archivo de otro pedido."""
+    key = (config.ADMIN_TOKEN or config.SUPABASE_KEY or "dev").encode()
+    return hmac.new(key, f"{order_id}:{n}".encode(), hashlib.sha256).hexdigest()[:24]
+
+
+def downloads(o: dict | None) -> list[dict]:
+    """Enlaces de descarga de los archivos de un pedido pagado (vacío si no hay archivos o no está pagado)."""
+    if not o or o.get("status") in (None, "checkout"):
+        return []
+    return [{"title": it.get("title"), "url": f"{config.BASE_URL}/api/descarga/{o['id']}/{n}.jpg?t={download_sig(o['id'], n)}"}
+            for n, it in enumerate(o.get("items") or [], 1) if is_digital(it)]
 
 
 async def create_checkout(raw_items: list[dict], email: str | None = None, discount: bool = False, clicks: dict | None = None) -> str:
@@ -70,9 +99,10 @@ async def create_checkout(raw_items: list[dict], email: str | None = None, disco
         metadata={"order_id": order_id, "store": "fe", **(clicks or {})},  # clicks: gclid/fbc/fbp del anuncio, para AdEngine
         client_reference_id=order_id,
         locale="es",
-        shipping_address_collection={"allowed_countries": ["ES", "PT", "FR", "IT", "DE", "BE", "NL", "AT", "IE", "US"]},  # Latinoamérica: Gelato no produce allí (envío 41 € y 3-4 semanas)
-        phone_number_collection={"enabled": True},
     )
+    if needs_shipping(items):  # solo archivos: no hay nada que enviar
+        params["shipping_address_collection"] = {"allowed_countries": ["ES", "PT", "FR", "IT", "DE", "BE", "NL", "AT", "IE", "US"]}  # Latinoamérica: Gelato no produce allí (envío 41 € y 3-4 semanas)
+        params["phone_number_collection"] = {"enabled": True}
     if email:
         params["customer_email"] = email
     if discount and config.STRIPE_COUPON:
@@ -153,10 +183,15 @@ async def fulfil(order_id: str) -> dict | None:
     if not config.GELATO_API_KEY:
         await db.patch("fe_orders", "id", order_id, {"status": "paid_pending_print", "gelato_order": "demo"})
         return await get_order(order_id)
+    if not needs_shipping(o.get("items") or []):  # solo archivos: se entregan por email al confirmar el pago
+        await db.patch("fe_orders", "id", order_id, {"status": "digital_sent", "gelato_order": "-"})
+        return await get_order(order_id)
     uids = await gelato_uids()
     ship = o.get("shipping") or {}
     lines, missing = [], []
     for n, it in enumerate(o["items"], 1):
+        if is_digital(it):
+            continue
         p = await db.product(it["slug"]) or {}
         k = uid_key(it["kind"], it["size"], it["frame"], p.get("orient", "h"))
         uid = uids.get(k)

@@ -83,6 +83,15 @@ def _name(o: dict) -> str:
 
 async def order_confirmed(o: dict):
     hola = f"¡Hola, {_name(o)}!" if _name(o) else "¡Hola!"
+    from . import shop  # aquí para no crear un ciclo (shop → mail)
+    files = shop.downloads(o)
+    if files:
+        links = "".join(f'<br>· <a href="{f["url"]}">{html.escape(f["title"] or "Tu lámina")}</a>' for f in files)
+        p = [hola, "Gracias por tu pedido. Aquí tienes tu lámina en alta calidad, sin marca de agua y lista para imprimir:" + links,
+             "Guarda este correo: el enlace es tuyo y no caduca."]
+        if shop.needs_shipping(o.get("items") or []):
+            p.append("El resto del pedido lo imprimimos bajo pedido y te llegará en <b>5-8 días laborables</b>. Te escribiremos cuando salga de camino.")
+        return await send(o.get("email"), f"Tu pedido {o['id']}: tu lámina para imprimir", p + [f"Número de pedido: <b>{o['id']}</b>"], items=o.get("items"))
     return await send(o.get("email"), f"Tu pedido {o['id']} está confirmado",
                [hola, "Gracias por tu pedido. Ya estamos preparando tu cuadro: lo imprimimos bajo pedido y te llegará en <b>5-8 días laborables</b>.",
                 "Te escribiremos cuando salga de camino, con el enlace de seguimiento.", f"Número de pedido: <b>{o['id']}</b>"],

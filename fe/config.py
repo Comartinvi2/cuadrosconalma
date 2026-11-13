@@ -51,6 +51,10 @@ CANVAS_PRICES = {  # (sin marco, con marco) · coste Gelato+envío ≈ 36/65, 46
 PRINT_SIZES = [("30x40", 300, 400), ("45x60", 450, 600), ("50x70", 500, 700), ("60x90", 600, 900)]
 PRINT_PRICES = {"30x40": 49, "45x60": 75, "50x70": 89, "60x90": 109}
 
+# Archivo para imprimir: la obra original (1536x1024 px) por email, sin envío ni Gelato
+DIGITAL_SIZE = "digital"
+DIGITAL_CENTS = 1990
+
 # UIDs de Gelato: se rellenan con /admin/fe/gelato (se guardan en Supabase) o por variable de entorno JSON
 GELATO_UIDS_JSON = env("FE_GELATO_UIDS")
 

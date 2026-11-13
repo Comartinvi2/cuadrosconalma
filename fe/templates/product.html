@@ -22,6 +22,11 @@
     <div class="qty"><button type="button" onclick="feQty(-1)">−</button><span id="qty">1</span><button type="button" onclick="feQty(1)">+</button></div>
     <button class="btn-primary" id="add">Añadir al carrito ➔</button>
     <button class="btn-dark" id="buyNow">Comprar ya</button>
+    <div class="digi-box">
+      <p class="digi-t">Archivo para imprimir en alta calidad · <b>19,90 €</b></p>
+      <p class="digi-s">La obra completa, sin marca de agua · Te llega al momento por email · Lista para imprimir hasta 20x30 cm · Tuya para siempre</p>
+      <button class="btn-outline" id="buyDigital" type="button">Comprar el archivo · 19,90 €</button>
+    </div>
 
     <div class="desc">
       <p>{{ c.intro }}</p>
@@ -107,6 +112,7 @@ document.querySelectorAll('.thumb').forEach(b => b.onclick = () => { document.qu
 function item(){ return {slug: P.slug, title: P.title, kind: P.kind, size: sel.size, frame: sel.frame, frameName: document.getElementById('frameName').textContent, qty: sel.qty, price: fePrice(), img: P.img}; }
 document.getElementById('add').onclick = () => { feCartAdd(item()); track('add_to_cart', {value: fePrice()*sel.qty, item: P.title}); location.href = '/carrito'; };
 document.getElementById('buyNow').onclick = () => feCheckout([item()]);
+document.getElementById('buyDigital').onclick = () => { track('add_to_cart', {value: 19.9, item: P.title}); feCheckout([{slug: P.slug, size: 'digital', frame: 'none', qty: 1, price: 19.9}]); };
 fePrice(); track('view_item', {value: fePrice(), item: P.title});
 </script>
 {% endblock %}

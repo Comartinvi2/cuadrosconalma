@@ -3,6 +3,7 @@
 Arranque: uvicorn fe.main:app
 """
 import asyncio
+import hmac
 import io
 import json
 import logging
@@ -214,7 +215,8 @@ async def thanks(request: Request, pedido: str = "", session_id: str = ""):
             o = await (shop.confirm(pedido, session_id) if session_id else shop.get_order(pedido))
         except Exception as e:
             log.warning("confirm %s: %s", pedido, e)
-    return T.TemplateResponse(request, "thanks.html", ctx(request, o=o, title=f"Gracias · {config.BRAND}", noindex=True))
+    return T.TemplateResponse(request, "thanks.html", ctx(request, o=o, files=shop.downloads(o), ships=shop.needs_shipping((o or {}).get("items") or []),
+                                                          title=f"Gracias · {config.BRAND}", noindex=True))
 
 
 @app.get("/encuentra-tu-cuadro", response_class=HTMLResponse)
@@ -310,6 +312,22 @@ async def gelato_webhook(request: Request, key: str = ""):
         raise HTTPException(403)
     ev = await request.json()
     return await shop.gelato_event(ev)
+
+
+@app.get("/api/descarga/{order_id}/{n}.jpg")
+async def download_file(order_id: str, n: int, t: str = ""):
+    """Archivo comprado: la obra original, solo con la firma del enlace y si el pedido está pagado."""
+    if not hmac.compare_digest(t, shop.download_sig(order_id, n)):
+        raise HTTPException(403)
+    o = await shop.get_order(order_id)
+    items = (o or {}).get("items") or []
+    if not o or o.get("status") in (None, "checkout") or not (1 <= n <= len(items)) or not shop.is_digital(items[n - 1]):
+        raise HTTPException(404)
+    p = await db.product(items[n - 1]["slug"])
+    if not p or not p.get("art_url"):
+        raise HTTPException(404)
+    return Response(await db.download(p["art_url"]), media_type="image/jpeg",
+                    headers={"Content-Disposition": f'attachment; filename="{p["slug"]}-cuadrosconalma.jpg"'})
 
 
 @app.get("/api/print/{slug}/{size}/{frame}.jpg")

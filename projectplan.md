@@ -94,3 +94,22 @@ paso. Solo totales por día: ni IP, ni identificadores, ni nada en el móvil.
 - [x] `/admin/embudo?token=…`: tabla de los últimos 30 días, totales y % de
       cada paso respecto al anterior.
 - [ ] Probar en local y en producción (los pasos suben al navegar).
+
+## Archivo para imprimir a 19,90 € (13 nov, María)
+
+Por qué: 225 clics de Meta, visitas de ~20 s y ninguna venta; la entrada más barata era un lienzo
+de 65 €. María pide una descarga a 19,90 € con el máximo protagonismo. El archivo es la obra
+original (1536x1024 px) → los textos prometen «hasta 20x30 cm», no más. Regla de María: no decir
+que imprimirla por tu cuenta sale barato.
+
+- [x] `size: "digital"` a 19,90 € (precio recalculado en servidor, siempre 1 unidad).
+- [x] Pago sin dirección ni teléfono si el pedido es solo de archivos; no se manda nada a Gelato
+      (estado `digital_sent`); en pedidos mixtos solo van a Gelato los físicos.
+- [x] Descarga `/api/descarga/{pedido}/{n}.jpg?t=firma`: firma HMAC, pedido pagado y artículo digital.
+- [x] Email de confirmación con el enlace; página de gracias con el botón de descarga.
+- [x] Ficha: recuadro «Archivo para imprimir en alta calidad · 19,90 €» con compra directa
+      (manda AddToCart al píxel para la optimización de Meta).
+- Verificado: tests 4/4 (`tests/test_digital.py`); en local, el botón manda el archivo a /api/checkout.
+- NO verificado: un pago real en Stripe y el email (necesita una compra de prueba).
+- Ojo (sin tocar): `/api/print/...` es pública porque la lee Gelato; con ella se puede bajar el
+  archivo de imprenta sin pagar.

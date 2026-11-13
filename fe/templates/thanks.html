@@ -1,10 +1,13 @@
 {% extends "base.html" %}
 {% block main %}
 <section class="section narrow center">
-  {% if o and o.status in ('paid', 'sent_to_print', 'paid_pending_print', 'paid_demo', 'print_error') %}
+  {% if o and o.status in ('paid', 'sent_to_print', 'paid_pending_print', 'paid_demo', 'print_error', 'digital_sent') %}
     <h1 class="col-h1">¡Gracias por tu pedido!</h1>
     <p>Pedido <b>{{ o.id }}</b>. Te hemos enviado el recibo por email.</p>
-    <p>Tu cuadro entra ahora en producción y te llegará en 5-8 días laborables. Si tienes cualquier duda, escríbenos a {{ email }}.</p>
+    {% for f in files %}<p><a class="btn-primary" href="{{ f.url }}">Descargar «{{ f.title }}»</a></p>{% endfor %}
+    {% if files %}<p>Tu lámina en alta calidad, sin marca de agua y lista para imprimir. También te la hemos enviado por email.</p>{% endif %}
+    {% if ships %}<p>Tu cuadro entra ahora en producción y te llegará en 5-8 días laborables.</p>{% endif %}
+    <p>Si tienes cualquier duda, escríbenos a {{ email }}.</p>
     <script>try{ localStorage.removeItem('fe_cart'); if(!sessionStorage.getItem('p_{{ o.id }}')){ track('purchase', {value: {{ (o.amount_cents or 0) / 100 }}, transaction_id: '{{ o.id }}'}); sessionStorage.setItem('p_{{ o.id }}','1'); } }catch(e){}</script>
   {% else %}
     <h1 class="col-h1">Comprobando tu pago…</h1>
