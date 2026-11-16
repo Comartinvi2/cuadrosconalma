@@ -7,7 +7,7 @@ import time
 
 import httpx
 
-from . import config, db, funnel, mail
+from . import config, db, funnel, mail, market
 
 
 def _stripe():
@@ -81,6 +81,8 @@ async def create_checkout(raw_items: list[dict], email: str | None = None, disco
     items = await validate_items(raw_items)
     if not items:
         raise ValueError("carrito vacío")
+    if market.market(country) == "digital" and needs_shipping(items):
+        raise ValueError("A tu país no enviamos cuadros: elige la lámina para imprimir.")
     order_id = "FM" + time.strftime("%y%m%d") + secrets.token_hex(3).upper()
     amount = sum(i["cents"] * i["qty"] for i in items)
     await db.upsert("fe_orders", [{"id": order_id, "items": items, "amount_cents": amount, "status": "checkout"}])

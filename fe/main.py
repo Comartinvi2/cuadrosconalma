@@ -17,7 +17,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from PIL import Image, ImageOps
 
-from . import adengine, art, config, content, db, funnel, seed, shop
+from . import adengine, art, config, content, db, funnel, market, seed, shop
 
 log = logging.getLogger("fe")
 logging.basicConfig(level=logging.INFO)
@@ -90,7 +90,9 @@ def faq_ld(pairs) -> str:
 
 
 def ctx(request: Request, **kw) -> dict:
+    mk = market.market(request.headers.get("cf-ipcountry"))
     base = {
+        "market": mk, "ship_note": market.SHIP_NOTE[mk], "announce": market.ANNOUNCE[mk], "printed": market.PRINTED[mk],
         "request": request, "brand": config.BRAND, "tagline": config.TAGLINE, "menu": MENU, "base_url": config.BASE_URL, "email": config.CONTACT_EMAIL,
         "discount": config.WELCOME_DISCOUNT_PCT, "year": time.strftime("%Y"), "site_jsonld": site_jsonld(),
         "ids": {"ga4": config.GA4_ID, "gads": config.GADS_ID, "gads_label": config.GADS_LABEL, "meta": config.META_PIXEL_ID,

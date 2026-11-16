@@ -4,7 +4,7 @@
   <h1 class="col-h1">Tu carrito</h1>
   <div id="cart"></div>
   <div id="cartFoot" hidden>
-    <p class="cart-total">Total: <b id="total"></b> <span class="tax">IVA incluido · envío gratis</span></p>
+    <p class="cart-total">Total: <b id="total"></b> <span class="tax">{{ ship_note }}</span></p>
     <button class="btn-primary" onclick="feCheckout(feCart())">Finalizar compra ➔</button>
     <p class="muted center">Pago seguro con tarjeta, Apple Pay o Google Pay. ¿Tienes el código BIENVENIDA15? Lo puedes poner en el siguiente paso.</p>
   </div>
