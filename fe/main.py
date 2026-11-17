@@ -17,7 +17,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from PIL import Image, ImageOps
 
-from . import adengine, art, config, content, db, funnel, market, seed, shop
+from . import adengine, art, config, content, db, funnel, market, seed, shop, upscale
 
 log = logging.getLogger("fe")
 logging.basicConfig(level=logging.INFO)
@@ -328,7 +328,7 @@ async def download_file(order_id: str, n: int, t: str = ""):
     p = await db.product(items[n - 1]["slug"])
     if not p or not p.get("art_url"):
         raise HTTPException(404)
-    return Response(await db.download(p["art_url"]), media_type="image/jpeg",
+    return Response(await upscale.art_300(p) or await db.download(p["art_url"]), media_type="image/jpeg",
                     headers={"Content-Disposition": f'attachment; filename="{p["slug"]}-cuadrosconalma.jpg"'})
 
 
