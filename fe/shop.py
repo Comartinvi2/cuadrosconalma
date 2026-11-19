@@ -84,7 +84,11 @@ async def create_checkout(raw_items: list[dict], email: str | None = None, disco
     if market.market(country) == "digital" and needs_shipping(items):
         raise ValueError("A tu país no enviamos cuadros: elige la lámina para imprimir.")
     order_id = "FM" + time.strftime("%y%m%d") + secrets.token_hex(3).upper()
-    amount = sum(i["cents"] * i["qty"] for i in items)
+    # Moneda de la visita: se cobra exactamente lo que enseña la página (market.to_local). Con el cupón de bienvenida, en euros.
+    cur = "eur" if discount else market.currency(country)
+    for i in items:
+        i["currency"], i["pay"] = cur, market.to_local(i["cents"], cur)
+    amount = sum(i["cents"] * i["qty"] for i in items)   # en euros: lo que suma AdEngine
     await db.upsert("fe_orders", [{"id": order_id, "items": items, "amount_cents": amount, "status": "checkout"}])
     if not config.STRIPE_SECRET_KEY:
         await db.patch("fe_orders", "id", order_id, {"status": "paid_demo"})
@@ -93,16 +97,17 @@ async def create_checkout(raw_items: list[dict], email: str | None = None, disco
     params = dict(
         mode="payment",
         line_items=[{
-            "price_data": {"currency": "eur", "unit_amount": i["cents"], "product_data": {"name": i["name"], **({"images": [i["image"]]} if i["image"] else {})}},
+            "price_data": {"currency": cur, "unit_amount": i["pay"], "product_data": {"name": i["name"], **({"images": [i["image"]]} if i["image"] else {})}},
             "quantity": i["qty"],
         } for i in items],
         success_url=f"{config.BASE_URL}/gracias?pedido={order_id}&session_id={{CHECKOUT_SESSION_ID}}",
         cancel_url=f"{config.BASE_URL}/carrito",
-        metadata={"order_id": order_id, "store": "fe", **(clicks or {})},  # clicks: gclid/fbc/fbp del anuncio, para AdEngine
+        metadata={"order_id": order_id, "store": "fe", "eur_cents": str(amount), **(clicks or {})},  # clicks: gclid/fbc/fbp del anuncio, para AdEngine
         client_reference_id=order_id,
         locale="es",
-        adaptive_pricing={"enabled": True},  # Stripe enseña el precio en la moneda del cliente (dólares, pesos…); cobramos en euros
     )
+    if cur == "eur":
+        params["adaptive_pricing"] = {"enabled": True}  # resto del mundo: Stripe enseña el precio en su moneda; cobramos en euros
     if needs_shipping(items):  # solo archivos: no hay nada que enviar
         params["shipping_address_collection"] = {"allowed_countries": ["ES", "PT", "FR", "IT", "DE", "BE", "NL", "AT", "IE", "US", "PR"]}  # Latinoamérica: Gelato no produce allí (envío 41 € y 3-4 semanas)
         params["phone_number_collection"] = {"enabled": True}
@@ -147,7 +152,7 @@ async def mark_paid(session) -> dict | None:
     addr = ship.get("address") or {}
     shipping = {"name": ship.get("name") or det.get("name"), "line1": addr.get("line1"), "line2": addr.get("line2"), "city": addr.get("city"),
                 "postcode": addr.get("postal_code"), "state": addr.get("state"), "country": addr.get("country"), "phone": det.get("phone")}
-    await db.patch("fe_orders", "id", oid, {"status": "paid", "email": det.get("email"), "shipping": shipping, "amount_cents": s.get("amount_total") or o.get("amount_cents")})
+    await db.patch("fe_orders", "id", oid, {"status": "paid", "email": det.get("email"), "shipping": shipping, "amount_cents": ((s.get("currency") or "eur") == "eur" and s.get("amount_total")) or o.get("amount_cents")})  # en dólares/pesos, el importe en euros del pedido
     o = await get_order(oid)
     await notify_once(o, "confirmed", mail.order_confirmed)
     return o

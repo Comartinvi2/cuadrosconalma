@@ -91,8 +91,12 @@ def faq_ld(pairs) -> str:
 
 def ctx(request: Request, **kw) -> dict:
     mk = market.market(request.headers.get("cf-ipcountry"))
+    cur = market.currency(request.headers.get("cf-ipcountry"))
+    if "prices" in kw:   # precios de la ficha en la moneda de la visita (los mismos que cobrará Stripe: shop.create_checkout)
+        kw["prices"] = json.dumps({k: market.major(market.to_local(round(v * 100), cur), cur) for k, v in json.loads(kw["prices"]).items()})
     base = {
-        "market": mk, "ship_note": market.SHIP_NOTE[mk], "announce": market.ANNOUNCE[mk], "printed": market.PRINTED[mk],
+        "market": mk, "cur": cur, "money": lambda eur: market.fmt(market.to_local(round(float(eur) * 100), cur), cur),
+        "digital_price": market.major(market.to_local(config.DIGITAL_CENTS, cur), cur), "ship_note": market.SHIP_NOTE[mk], "announce": market.ANNOUNCE[mk], "printed": market.PRINTED[mk],
         "request": request, "brand": config.BRAND, "tagline": config.TAGLINE, "menu": MENU, "base_url": config.BASE_URL, "email": config.CONTACT_EMAIL,
         "discount": config.WELCOME_DISCOUNT_PCT, "year": time.strftime("%Y"), "site_jsonld": site_jsonld(),
         "ids": {"ga4": config.GA4_ID, "gads": config.GADS_ID, "gads_label": config.GADS_LABEL, "meta": config.META_PIXEL_ID,
@@ -264,6 +268,21 @@ async def static_page(request: Request, page: str):
 @app.get("/api/products")
 async def api_products():
     return [{"slug": p["slug"], "title": p["title"], "kind": p["kind"], "img": card(p)["img"]} for p in await db.products()]
+
+
+@app.post("/api/cart/quote")
+async def api_cart_quote(request: Request):
+    """Precios del carrito en la moneda de la visita, calculados igual que en el pago de Stripe (shop.create_checkout)."""
+    raw = ((await request.json()) or {}).get("items") or []
+    cur = market.currency(request.headers.get("cf-ipcountry"))
+    prices, total = [], 0
+    for r in raw[:20]:
+        its = await shop.validate_items([r])
+        if not its:
+            prices.append(None); continue
+        unit = market.to_local(its[0]["cents"], cur)
+        prices.append(market.major(unit, cur)); total += unit * its[0]["qty"]
+    return {"currency": cur, "prices": prices, "total": market.major(total, cur), "total_text": market.fmt(total, cur)}
 
 
 @app.post("/api/checkout")

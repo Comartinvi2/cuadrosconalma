@@ -1,3 +1,9 @@
+// Mismo texto que market.fmt en el servidor; los importes ya llegan convertidos a la moneda de la visita (window.CUR)
+function feMoney(x){ x = Math.round(x * 100) / 100; const c = window.CUR || 'eur', d = {minimumFractionDigits: x % 1 ? 2 : 0, maximumFractionDigits: 2};
+  if (c === 'usd') return '$' + x.toLocaleString('en-US', d) + '\u00a0USD';
+  if (c === 'mxn') return '$' + Math.round(x).toLocaleString('en-US') + '\u00a0MXN';
+  if (c === 'clp') return '$' + Math.round(x).toLocaleString('es-CL') + '\u00a0CLP';
+  return x.toLocaleString('es-ES', d) + ' €'; }
 function feCart(){ try{ return JSON.parse(localStorage.getItem('fe_cart')||'[]'); }catch(e){ return []; } }
 function feSave(c){ try{ localStorage.setItem('fe_cart', JSON.stringify(c)); }catch(e){} feCount(); }
 function feCount(){ const n = feCart().reduce((s,i)=>s+i.qty,0); const el = document.getElementById('cartCount'); if (el) el.textContent = n || ''; }

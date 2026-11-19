@@ -8,7 +8,7 @@
     {% if files %}<p>Tu lámina en alta calidad, sin marca de agua y lista para imprimir. También te la hemos enviado por email.</p>{% endif %}
     {% if ships %}<p>Tu cuadro entra ahora en producción y te llegará en 5-8 días laborables.</p>{% endif %}
     <p>Si tienes cualquier duda, escríbenos a {{ email }}.</p>
-    <script>try{ localStorage.removeItem('fe_cart'); if(!sessionStorage.getItem('p_{{ o.id }}')){ track('purchase', {value: {{ (o.amount_cents or 0) / 100 }}, transaction_id: '{{ o.id }}'}); sessionStorage.setItem('p_{{ o.id }}','1'); } }catch(e){}</script>
+    <script>try{ localStorage.removeItem('fe_cart'); if(!sessionStorage.getItem('p_{{ o.id }}')){ track('purchase', {value: {{ (o.amount_cents or 0) / 100 }}, currency: 'EUR', transaction_id: '{{ o.id }}'}); sessionStorage.setItem('p_{{ o.id }}','1'); } }catch(e){}</script>
   {% else %}
     <h1 class="col-h1">Comprobando tu pago…</h1>
     <p>Si acabas de pagar, espera unos segundos y recarga la página. Si no se completa, escríbenos a {{ email }}.</p>

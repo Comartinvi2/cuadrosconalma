@@ -34,7 +34,7 @@ def test_mexico_solo_para_imprimir(page):
     t = page("MX")
     assert 'id="add" hidden' in t and 'id="buyNow" hidden' in t and 'id="buyDigital"' in t
     assert "Península" not in t.split('<details class="acc"><summary>Envío')[0] and "pagas en tu moneda" in t
-    assert "if (true) document.getElementById('price').textContent = '19,90 €'" in t
+    assert "if (true) document.getElementById('price').textContent = \"$399\\u00a0MXN\"" in t   # en pesos (19-nov)
 
 
 def test_eeuu(page):

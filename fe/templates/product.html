@@ -10,7 +10,7 @@
   <div class="buy">
     <h1 class="p-title">{{ p.title }}</h1>
     {% if reviews %}<a href="#opiniones" class="p-rev">★★★★★ {{ reviews|length }} opiniones</a>{% endif %}
-    <p class="p-price"><span id="price">{{ p.from_price|eur }}</span> <span class="tax">{{ ship_note }}</span></p>
+    <p class="p-price"><span id="price">{{ money(p.from_price) }}</span> <span class="tax">{{ ship_note }}</span></p>
     <div class="opt"{% if market == "digital" %} hidden{% endif %}>
       <p class="opt-l">Marco: <b id="frameName">{{ dframe.label }}</b></p>
       <div class="chips" id="frames">{% for f in frames %}<button class="chip frame-chip f-{{ f.key }}{% if f.key == dframe.key %} on{% endif %}" data-k="{{ f.key }}" data-l="{{ f.label }}" title="{{ f.label }}"><span></span></button>{% endfor %}</div>
@@ -23,9 +23,9 @@
     <button class="btn-primary" id="add"{% if market == "digital" %} hidden{% endif %}>Añadir al carrito ➔</button>
     <button class="btn-dark" id="buyNow"{% if market == "digital" %} hidden{% endif %}>Comprar ya</button>
     <div class="digi-box">
-      <p class="digi-t">Lámina en alta calidad para imprimir · <b>19,90 €</b></p>
+      <p class="digi-t">Lámina en alta calidad para imprimir · <b>{{ money(19.9) }}</b></p>
       <p class="digi-s">La obra completa, sin marca de agua · En alta resolución, 300 ppp en A4 · Te llega al momento por email · Tuya para siempre</p>
-      <button class="btn-outline" id="buyDigital" type="button">Comprar para imprimir · 19,90 €</button>
+      <button class="btn-outline" id="buyDigital" type="button">Comprar para imprimir · {{ money(19.9) }}</button>
     </div>
 
     <div class="desc">
@@ -96,7 +96,7 @@
 const P = {slug: {{ p.slug|tojson }}, title: {{ p.title|tojson }}, kind: {{ p.kind|tojson }}, img: {{ (p.img or '')|tojson }}};
 const PRICES = {{ prices|safe }};
 let sel = {frame: {{ dframe.key|tojson }}, size: {{ sizes[0].key|tojson }}, qty: 1};
-function fePrice(){ const v = PRICES[sel.size+'|'+sel.frame]; document.getElementById('price').textContent = v.toLocaleString('es-ES') + ' €'; return v; }
+function fePrice(){ const v = PRICES[sel.size+'|'+sel.frame]; document.getElementById('price').textContent = feMoney(v); return v; }
 function feQty(d){ sel.qty = Math.max(1, Math.min(10, sel.qty + d)); document.getElementById('qty').textContent = sel.qty; }
 document.querySelectorAll('#frames .chip').forEach(b => b.onclick = () => {
   document.querySelectorAll('#frames .chip').forEach(x => x.classList.remove('on')); b.classList.add('on');
@@ -112,8 +112,8 @@ document.querySelectorAll('.thumb').forEach(b => b.onclick = () => { document.qu
 function item(){ return {slug: P.slug, title: P.title, kind: P.kind, size: sel.size, frame: sel.frame, frameName: document.getElementById('frameName').textContent, qty: sel.qty, price: fePrice(), img: P.img}; }
 document.getElementById('add').onclick = () => { feCartAdd(item()); track('add_to_cart', {value: fePrice()*sel.qty, item: P.title}); location.href = '/carrito'; };
 document.getElementById('buyNow').onclick = () => feCheckout([item()]);
-document.getElementById('buyDigital').onclick = () => { track('add_to_cart', {value: 19.9, item: P.title}); feCheckout([{slug: P.slug, size: 'digital', frame: 'none', qty: 1, price: 19.9}]); };
+document.getElementById('buyDigital').onclick = () => { track('add_to_cart', {value: {{ digital_price|tojson }}, item: P.title}); feCheckout([{slug: P.slug, size: 'digital', frame: 'none', qty: 1, price: {{ digital_price|tojson }}}]); };
 fePrice(); track('view_item', {value: fePrice(), item: P.title});
-if ({{ (market == "digital")|tojson }}) document.getElementById('price').textContent = '19,90 €';  // México/Chile: solo para imprimir
+if ({{ (market == "digital")|tojson }}) document.getElementById('price').textContent = {{ money(19.9)|tojson }};  // México/Chile: solo para imprimir
 </script>
 {% endblock %}
