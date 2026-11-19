@@ -49,3 +49,11 @@ def test_carrito_y_stripe_cobran_lo_mismo(page, monkeypatch):
 def test_cupon_de_bienvenida_en_euros(page, monkeypatch):
     p = checkout(monkeypatch, [LIENZO], "US", discount=True)
     assert p["line_items"][0]["price_data"]["currency"] == "eur"
+
+
+def test_test_de_estilo_y_correo_en_moneda_local(page):
+    t = TestClient(main.app).get("/encuentra-tu-cuadro", headers={"cf-ipcountry": "US"}).text
+    assert "from_text" in t and "${a.from_price} €" not in t
+    from fe import mail
+    assert mail._money({"cents": 6500, "qty": 2, "currency": "usd", "pay": 7490}) == "$149.80 USD"
+    assert mail._money({"cents": 6500, "qty": 1}) == "65,00 €"

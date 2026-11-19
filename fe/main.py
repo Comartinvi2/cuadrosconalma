@@ -227,9 +227,11 @@ async def thanks(request: Request, pedido: str = "", session_id: str = ""):
 
 @app.get("/encuentra-tu-cuadro", response_class=HTMLResponse)
 async def quiz(request: Request):
+    cur = market.currency(request.headers.get("cf-ipcountry"))
     prods = [card(p) for p in await db.products()]
     slim = [{"slug": p["slug"], "title": p["title"], "img": p["img"], "theme": p["theme"], "palette": p["palette"], "orient": p["orient"],
-             "collections": p.get("collections") or [], "from_price": p["from_price"], "best": p.get("bestseller")} for p in prods]
+             "collections": p.get("collections") or [], "from_price": p["from_price"], "best": p.get("bestseller"),
+             "from_text": market.fmt(market.to_local(p["from_price"] * 100, cur), cur)} for p in prods]
     return T.TemplateResponse(request, "quiz.html", ctx(request, products=json.dumps(slim), title=f"¿Cuál es tu cuadro? · {config.BRAND}",
                                                  description="Responde 4 preguntas y te recomendamos el cuadro religioso moderno que mejor encaja con tu casa y tu fe."))
 

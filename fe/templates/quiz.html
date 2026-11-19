@@ -75,7 +75,7 @@ function qScore(p){
 function qShow(){
   const top = PRODS.map(p => [qScore(p), p]).sort((a,b)=>b[0]-a[0]).slice(0,3).map(x=>x[1]);
   const [a, ...rest] = top;
-  document.getElementById('qResult').innerHTML = `<a class="q-main" href="/cuadro/${a.slug}">${a.img?`<img src="${a.img}" alt="">`:''}<p class="card-title">${a.title}</p><p class="card-price">Desde ${a.from_price} €</p><span class="btn-primary">Ver el cuadro →</span></a>
+  document.getElementById('qResult').innerHTML = `<a class="q-main" href="/cuadro/${a.slug}">${a.img?`<img src="${a.img}" alt="">`:''}<p class="card-title">${a.title}</p><p class="card-price">Desde ${a.from_text}</p><span class="btn-primary">Ver el cuadro →</span></a>
     <p class="eyebrow">También para ti</p><div class="q-more">${rest.map(p=>`<a href="/cuadro/${p.slug}">${p.img?`<img src="${p.img}" alt="">`:''}<p>${p.title}</p></a>`).join('')}</div>`;
 }
 </script>

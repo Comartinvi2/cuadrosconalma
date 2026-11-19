@@ -22,6 +22,13 @@ ADMIN = config.env("ADMIN_EMAIL", "hola@comartinvi.com")
 ENABLED = bool(HOST and USER and PASS)
 
 
+def _money(i: dict) -> str:
+    """Importe de una línea en la moneda en que se pagó (dólares/pesos si se pagó así)."""
+    from . import market
+    cur = i.get("currency") or "eur"
+    return market.fmt(i["pay"] * i["qty"], cur) if cur != "eur" and i.get("pay") else _eur(i["cents"] * i["qty"])
+
+
 def _eur(cents: int) -> str:
     return f"{cents / 100:.2f}".replace(".", ",") + " €"
 
@@ -52,7 +59,7 @@ async def send(to: str | None, subject: str, paragraphs: list[str], button: tupl
     if items:
         rows = "".join(
             f'<tr><td style="padding:8px 0;border-bottom:1px solid #eee">{html.escape(i["name"])} × {i["qty"]}</td>'
-            f'<td style="padding:8px 0;border-bottom:1px solid #eee;text-align:right">{_eur(i["cents"] * i["qty"])}</td></tr>'
+            f'<td style="padding:8px 0;border-bottom:1px solid #eee;text-align:right">{_money(i)}</td></tr>'
             for i in items)
         rows = f'<table style="width:100%;border-collapse:collapse;font-size:14px;margin:16px 0">{rows}</table>'
     btn = f'<p style="margin:24px 0"><a href="{button[1]}" style="background:#1d1b19;color:#fff;padding:12px 22px;text-decoration:none;display:inline-block">{html.escape(button[0])}</a></p>' if button else ""
