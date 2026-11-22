@@ -17,12 +17,15 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from PIL import Image, ImageOps
 
-from . import adengine, art, config, content, db, funnel, market, seed, shop, upscale
+from . import adengine, art, blog, config, content, db, funnel, market, seed, shop, upscale
 
 log = logging.getLogger("fe")
 logging.basicConfig(level=logging.INFO)
 
 app = FastAPI(title=config.BRAND, docs_url=None, redoc_url=None)
+
+app.add_api_route("/blog", blog.proxy, methods=["GET"], include_in_schema=False)
+app.add_api_route("/blog/{path:path}", blog.proxy, methods=["GET"], include_in_schema=False)
 from pathlib import Path
 HERE = Path(__file__).parent
 @app.get("/favicon.ico", include_in_schema=False)
