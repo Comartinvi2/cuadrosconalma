@@ -381,7 +381,7 @@ async def robots():
           "Google-Extended", "Applebot-Extended", "Bingbot", "meta-externalagent", "CCBot"]
     out = "User-agent: *\nAllow: /\n" + block + "\n"
     out += "# Asistentes de IA: bienvenidos (resumen en /llms.txt)\n" + "".join(f"User-agent: {b}\n" for b in ai) + "Allow: /\n" + block
-    return out + f"\nSitemap: {config.BASE_URL}/sitemap.xml\n"
+    return out + f"\nSitemap: {config.BASE_URL}/sitemap.xml\nSitemap: {config.BASE_URL}/blog/sitemap.xml\n"
 
 
 @app.get("/sitemap.xml")
