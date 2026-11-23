@@ -38,7 +38,7 @@ window.__IDS = {{ ids|tojson }};
   if (I.pinterest) { !function(e){if(!window.pintrk){window.pintrk=function(){window.pintrk.queue.push(Array.prototype.slice.call(arguments))};var n=window.pintrk;n.queue=[],n.version="3.0";var t=document.createElement("script");t.async=!0,t.src=e;var r=document.getElementsByTagName("script")[0];r.parentNode.insertBefore(t,r)}}("https://s.pinimg.com/ct/core.js"); pintrk('load', I.pinterest); pintrk('page'); }
   }
   window.__cargarCookies = cargar; if (ok === 'si') cargar();
-  window.track = function(ev, d){ d=d||{}; const cur = d.currency || (window.CUR || 'eur').toUpperCase(); delete d.currency; try{ if(window.gtag){ gtag('event', ev, d); if(ev==='purchase'&&I.gads&&I.gads_label) gtag('event','conversion',{send_to:I.gads+'/'+I.gads_label,value:d.value,currency:cur,transaction_id:d.transaction_id}); }
+  window.track = function(ev, d){ d=d||{}; const cur = d.currency || (window.CUR || 'eur').toUpperCase(); delete d.currency; try{ if(window.gtag){ gtag('event', ev, Object.assign({currency: cur}, d)); if(ev==='purchase'&&I.gads&&I.gads_label) gtag('event','conversion',{send_to:I.gads+'/'+I.gads_label,value:d.value,currency:cur,transaction_id:d.transaction_id}); }
     if(window.fbq){ const m={view_item:'ViewContent',add_to_cart:'AddToCart',begin_checkout:'InitiateCheckout',purchase:'Purchase',sign_up:'Lead'}; fbq('track', m[ev]||ev, {value:d.value,currency:cur,content_name:d.item}, d.transaction_id ? {eventID: String(d.transaction_id)} : undefined); }
     if(window.pintrk){ const m={add_to_cart:'addtocart',purchase:'checkout',sign_up:'signup'}; if(m[ev]) pintrk('track', m[ev], {value:d.value,currency:cur}); } }catch(e){} };
 })();
