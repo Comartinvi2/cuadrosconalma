@@ -11,7 +11,7 @@ TAGLINE = env("TAGLINE", "Arte cristiano contemporáneo")
 BASE_URL = env("BASE_URL", "http://localhost:8000").rstrip("/")
 CONTACT_EMAIL = env("CONTACT_EMAIL", "hola@cuadrosconalma.com")
 ADMIN_TOKEN = env("ADMIN_TOKEN")
-BLACK_FRIDAY_END = 0  # ESCONDIDA hasta que BLACK26 funcione en Stripe (23-nov); para volver a mostrarla: 1796079600. 1-dic-2026 00:00 (Madrid): hasta entonces la cinta anuncia el código BLACK26 (-10 %, en Stripe)
+BLACK_FRIDAY_END = 1796079600  # 1-dic-2026 00:00 (Madrid): hasta entonces la cinta anuncia el código BLACK26 (-10 %, en Stripe)
 WELCOME_DISCOUNT_PCT = int(env("WELCOME_DISCOUNT_PCT", "15"))
 STRIPE_COUPON = env("STRIPE_WELCOME_COUPON")  # id de cupón de Stripe del 15 % (opcional)
 
