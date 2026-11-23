@@ -101,7 +101,7 @@ def ctx(request: Request, **kw) -> dict:
         "market": mk, "cur": cur, "money": lambda eur: market.fmt(market.to_local(round(float(eur) * 100), cur), cur),
         "digital_price": market.major(market.to_local(config.DIGITAL_CENTS, cur), cur), "ship_note": market.SHIP_NOTE[mk], "announce": market.ANNOUNCE[mk], "printed": market.PRINTED[mk],
         "request": request, "brand": config.BRAND, "tagline": config.TAGLINE, "menu": MENU, "base_url": config.BASE_URL, "email": config.CONTACT_EMAIL,
-        "discount": config.WELCOME_DISCOUNT_PCT, "year": time.strftime("%Y"), "site_jsonld": site_jsonld(),
+        "discount": config.WELCOME_DISCOUNT_PCT, "black_friday": time.time() < config.BLACK_FRIDAY_END, "year": time.strftime("%Y"), "site_jsonld": site_jsonld(),
         "ids": {"ga4": config.GA4_ID, "gads": config.GADS_ID, "gads_label": config.GADS_LABEL, "meta": config.META_PIXEL_ID,
                 "clarity": config.CLARITY_ID, "pinterest": config.PINTEREST_TAG_ID},
     }
